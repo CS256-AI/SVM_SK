@@ -9,8 +9,8 @@ class SVM:
         else: return 0
 
     def __init__(self, xp, xn, epsilon, max_updates):
-        self.xp = np.array(xp, dtype='int64')/255
-        self.xn = np.array(xn, dtype='int64')/255
+        self.xp = np.array(xp)
+        self.xn = np.array(xn)
         self.epsilon = epsilon
         self.max_updates = max_updates
         self.alpha_p = np.array([0] * len(xp), dtype='int64')
