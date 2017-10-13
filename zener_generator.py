@@ -10,14 +10,14 @@ import numpy as np
 class Data:
 
     def __init__(self):
-        self.padding = 1  # padding to be used to draw the image
+        self.padding = 2  # padding to be used to draw the image
         self.color = 0  # color for drawing the image. All images ddrawn in balck
         self.brush_stroke_max = 2  # Max brush stroke
-        self.pos_shift_max = 3  # Max shift in position of image in shift transformation
+        self.pos_shift_max = 2  # Max shift in position of image in shift transformation
         self.rotation_max = 20  # Max positive/ negative rotation in degrees orientation transformation
         self.resize_ratio_min = 0.1  # (1- resize_ratio_min) gives lower bound on resized images size
         self.ellip_num_max = 3  # Max no. of stray sllipsoids to be drawn in image
-        self.ellip_size_max = 3  # Max width, height of ellipsoid in pixels
+        self.ellip_size_max = 2  # Max width, height of ellipsoid in pixels
         self.size = 25  # size of canvas
 
     def _draw_o(self, width):
@@ -49,11 +49,11 @@ class Data:
         image = Image.new('L', (self.size, self.size), 255)
         draw = ImageDraw.Draw(image)
         # Draw the vertical line
-        draw.line([((self.size-1)//2, self.padding), ((self.size-1)//2, self.size-(self.padding + 1))],
+        draw.line([(self.size/2, self.padding), (self.size/2, self.size-(self.padding + 1))],
                   fill=self.color,
                   width=width)
         # Draw the horizontal line
-        draw.line([(self.padding, (self.size-1)//2), (self.size - (self.padding + 1), (self.size-1)//2)],
+        draw.line([(self.padding, self.size/2), (self.size - (self.padding + 1), (self.size-1)//2)],
                   fill=self.color,
                   width=width)
         del draw
@@ -286,3 +286,5 @@ class Data:
 #     print(fol_name, num_examples)
 #     data = Data()
 #     data.gen_images(fol_name, int(num_examples))
+data = Data()
+data.gen_images('training_1', 10)
