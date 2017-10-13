@@ -260,7 +260,7 @@ class Data:
         y = np.array(y_list)
         return (file_names,x,y)
 
-    def scale_data(self, input_data):
+    def find_scale(self, input_data):
         file_names, x, y = input_data
         x_pos = x[y > 0]
         x_neg = x[y < 0]
@@ -272,11 +272,14 @@ class Data:
         r_pos = max(np.linalg.norm(rdiff_pos, axis=1))
         rdiff_neg = x_neg - m_neg
         r_neg = max(np.linalg.norm(rdiff_neg, axis=1))
-        lam = (1/2.0)*(r/(r_pos + r_neg))
+        lam = (0.9)*(r/(r_pos + r_neg))
         # print('lam --> {}'.format(lam))
-        x_pos_prime = lam * x_pos
-        x_neg_prime = lam * x_neg
-        return(lam, x_pos_prime, x_neg_prime)
+        # x_pos_prime = lam * x_pos + (1-lam) * m_pos
+        # x_neg_prime = lam * x_neg + (1 - lam) * m_neg
+        return(lam, x_pos, x_neg, m_pos, m_neg)
+
+    def scale_data(self, x, lam, m):
+        return lam * x + (1-lam) * m
 
 # if len(sys.argv) < 2:
 #     print("Insufficient number of arguments.\nPattern : python zener_generator.py data 10000")

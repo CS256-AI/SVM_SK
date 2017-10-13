@@ -1,4 +1,6 @@
 import numpy as np
+import os
+import pickle
 import sys
 
 
@@ -8,7 +10,7 @@ class SVM:
         if i == j: return 1
         else: return 0
 
-    def __init__(self, xp, xn, epsilon, max_updates):
+    def __init__(self, xp =[], xn =[], epsilon=0, max_updates=0):
         self.xp = np.array(xp)
         self.xn = np.array(xn)
         self.epsilon = epsilon
@@ -23,11 +25,39 @@ class SVM:
         updates = 0
         self.sk_initialize()
         i_t, t_positive, m_t = self.sk_optimize()
-        while not self.stop_condition(m_t) and updates < self.max_updates:
-            print "Current Iteration : {}. m_t : {} \t t_positive : {} \t i_t : {}".format(updates, m_t, t_positive, i_t)
+        while not self.stop_condition(m_t)[0] and updates < self.max_updates:
+            print "Current Iteration : {}. Difference : {}".format(updates, self.stop_condition(m_t)[1])
             self.sk_update(i_t, t_positive)
             i_t, t_positive, m_t = self.sk_optimize()
             updates += 1
+
+        if self.stop_condition(m_t)[0]:
+            print "Model converged after {} updates.\nModel Summay:\nFinal distance between hyperplanes : {}\nFinal Difference: {}".format(updates, m_t, self.stop_condition(m_t)[1])
+        else:
+            print "Model failed to converge after {} updates.\nModel Summay:\nFinal distance between hyperplanes : {}\nFinal Difference: {}".format(self.max_updates, m_t, self.stop_condition(m_t)[1])
+
+        # Eliminating values corresponding to alpha's with value 0
+        self.xp = self.xp[self.alpha_p != 0]
+        self.xn = self.xn[self.alpha_n != 0]
+        self.alpha_p = self.alpha_p[self.alpha_p != 0]
+        self.alpha_n = self.alpha_n[self.alpha_n != 0]
+
+    def test(self, test_x):
+        score = 0
+        test_x = np.array(test_x)
+
+        # Positive alpha
+        score += np.sum(self.kernel(self.xp, test_x) * self.alpha_p)
+
+        # Negative alpha
+        score += np.sum(self.kernel(self.xn, test_x) * self.alpha_n * -1)
+
+        score += (self.B - self.A)/2.0
+
+        if score>0 :
+            return 1
+        else:
+            return 0
 
     def sk_initialize(self):
         i_1, j_1 = 0, 0  # can be randomized
@@ -125,11 +155,10 @@ class SVM:
 
     def stop_condition(self, m_t):
         hp_distance = np.sqrt(self.A + self.B - 2*self.C)
-        print "Difference between m and mt-- > " + str(hp_distance - m_t)
         if hp_distance - m_t < self.epsilon:
-            return True
+            return True, hp_distance-m_t
         else:
-            return False
+            return False, hp_distance-m_t
 
     def m_positive(self, p):
         numerator = self.D_P[p] - self.E_P[p] + self.B - self.C
@@ -143,3 +172,35 @@ class SVM:
 
     def polynomial_kernel(self, x, y):
         return (np.dot(x, y) + 1) ** self.kernel_degree
+
+    def save_model(self, model_file_name):
+        os.chdir(".")
+        model = {
+            "xp": self.xp,
+            "xn": self.xn,
+            "A": self.A,
+            "B": self.B,
+            "alpha_p": self.alpha_p,
+            "alpha_n": self.alpha_n
+        }
+
+        try:
+            with open(model_file_name, "wb") as f:
+                pickle.dump(model, f)
+        except Exception as e:
+            print "ERROR: Exception while trying to save model. " + str(e)
+
+    def load_model(self, model_file_name):
+        os.chdir(".")
+        try:
+            with open(model_file_name, "rb") as f:
+                model = pickle.load(f)
+                self.alpha_n = model["alpha_n"]
+                self.alpha_p = model["alpha_p"]
+                self.xp = model["xp"]
+                self.xn = model["xn"]
+                self.A = model["A"]
+                self.B = model["B"]
+        except Exception as e:
+            print "ERROR: Exception while loading saved model. " +str(e)
+
