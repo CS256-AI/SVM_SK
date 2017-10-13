@@ -4,7 +4,7 @@ import random
 import os
 import math
 import sys
-import numpy
+import numpy as np
 
 
 class Data:
@@ -229,7 +229,7 @@ class Data:
             func = getattr(Data, "_draw_" + symbol_sel)  # Get the function object to draw appropriate symbol
             # print("func --> {}".format(func))
             # The variation for thickness of brush is ensured by random value of width
-            width = random.randint(1, data.brush_stroke_max)
+            width = random.randint(1, self.brush_stroke_max)
             image = func(self, width)
             print('Image size --> {}'.format(image.size))
             image = self._trans_resize(image)
@@ -240,27 +240,43 @@ class Data:
 
     def get_data(self, folder_name, symbol_name):
         file_names = []
-        y = []  # whether file contains symbol or nor
-        x_list = [] # input matrix containing image data
+        y_list = []  # whether file contains symbol or nor
+        x_list = []  # input matrix containing image data
         os.chdir(folder_name)
         symbol_name = symbol_name.upper()
         for file_name in os.listdir('.'):
             if not (file_name.endswith('.png')):
                 continue
             image = Image.open(file_name)
-            image_array = numpy.array(image).flatten()
+            image_array = np.array(image).flatten()
             if symbol_name in file_name:
-                y.append(1)
+                y_list.append(1)
             else:
-                y.append(0)
+                y_list.append(-1)
             file_names.append(file_name)
             x_list.append(image_array)
-        x = numpy.array(x_list)
-        # print(x.shape)
-        # print(x)
-        # print(y)
-        # print(file_names)
+        x = np.array(x_list)
+        x = x/255
+        y = np.array(y_list)
         return (file_names,x,y)
+
+    def scale_data(self, input_data):
+        file_names, x, y = input_data
+        x_pos = x[y > 0]
+        x_neg = x[y < 0]
+        m_pos = np.mean(x_pos, axis=0)
+        m_neg = np.mean(x_neg, axis=0)
+        np.set_printoptions(threshold=np.inf)
+        r = np.linalg.norm(m_pos - m_neg)
+        rdiff_pos = x_pos - m_pos
+        r_pos = max(np.linalg.norm(rdiff_pos, axis=1))
+        rdiff_neg = x_neg - m_neg
+        r_neg = max(np.linalg.norm(rdiff_neg, axis=1))
+        lam = (1/2.0)*(r/(r_pos + r_neg))
+        # print('lam --> {}'.format(lam))
+        x_pos_prime = lam * x_pos
+        x_neg_prime = lam * x_neg
+        return(lam, x_pos_prime, x_neg_prime)
 
 # if len(sys.argv) < 2:
 #     print("Insufficient number of arguments.\nPattern : python zener_generator.py data 10000")
@@ -270,5 +286,3 @@ class Data:
 #     print(fol_name, num_examples)
 #     data = Data()
 #     data.gen_images(fol_name, int(num_examples))
-data = Data()
-print(data.get_data('training','p'))
