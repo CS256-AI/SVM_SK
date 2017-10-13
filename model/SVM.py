@@ -147,7 +147,6 @@ class SVM:
         else:
             return False
 
-
     def m_positive(self, p):
         numerator = self.D_P[p] - self.E_P[p] + self.B - self.C
         denominator = (self.A + self.B -2*self.C) ** (1/2.0)
