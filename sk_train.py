@@ -23,4 +23,4 @@ else:
     class_letter, model_file, train_folder = sys.argv[3:]
 """
 
-train(0.1, 10 0000, "O", "generated_images", "D:\SJSU\Fall17\CS256\SVM_SK\Model_O.txt")
+train(0.1, 100000, "O", "generated_images", "D:\SJSU\Fall17\CS256\SVM_SK\Model_O.txt")
