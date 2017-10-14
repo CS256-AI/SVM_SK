@@ -10,15 +10,19 @@ class SVM:
         if i == j: return 1
         else: return 0
 
-    def __init__(self, xp =[], xn =[], epsilon=0, max_updates=0):
+    def __init__(self, xp =[], xn =[], mpos=[], mneg=[], _lambda =0, epsilon=0, max_updates=0, class_letter = ""):
         self.xp = np.array(xp)
         self.xn = np.array(xn)
         self.epsilon = epsilon
         self.max_updates = max_updates
-        self.alpha_p = np.array([0] * len(xp), dtype='int64')
-        self.alpha_n = np.array([0] * len(xn), dtype='int64')
+        self.alpha_p = np.array([0] * len(xp), dtype='float64')
+        self.alpha_n = np.array([0] * len(xn), dtype='float64')
         self.kernel_degree = 4
         self.kernel = self.polynomial_kernel
+        self.class_letter = class_letter
+        self.mpos = mpos
+        self.mneg = mneg
+        self._lambda = _lambda
 
     def train(self):
         # Initialization Step
@@ -34,7 +38,7 @@ class SVM:
         if self.stop_condition(m_t)[0]:
             print "Model converged after {} updates.\nModel Summay:\nFinal distance between hyperplanes : {}\nFinal Difference: {}".format(updates, m_t, self.stop_condition(m_t)[1])
         else:
-            print "Model failed to converge after {} updates.\nModel Summay:\nFinal distance between hyperplanes : {}\nFinal Difference: {}".format(self.max_updates, m_t, self.stop_condition(m_t)[1])
+            print "Model did not converge less that {}.\nModel Summay:\nFinal distance between hyperplanes : {}\nFinal Difference: {}".format(self.epsilon, m_t, self.stop_condition(m_t)[1])
 
         # Eliminating values corresponding to alpha's with value 0
         self.xp = self.xp[self.alpha_p != 0]
@@ -111,17 +115,6 @@ class SVM:
             self.D_P = (1 - q) * self.D_P + q * self.kernel(self.xp, self.xp[i_t])
 
 
-            """
-            # Update alpha and D for positive samples of X
-            for i in xrange(len(self.xp)):
-                self.alpha_p[i] = ((1-q) * self.alpha_p[i]) + (q*SVM.delta(i, i_t))
-                self.D_P[i] = (1-q)* self.D_P[i] + q*xt_xt
-         
-            # Update D for negative samples of X
-            for i in xrange(len(self.xn)):
-                
-            """
-
         else:
             xt_xt = self.kernel(self.xn[i_t], self.xn[i_t])
             # sample with minimum m is negative
@@ -141,17 +134,6 @@ class SVM:
             # Update E for all X
             self.E_N = (1 - q) * self.E_N + q * self.kernel(self.xn, self.xn[i_t])
             self.E_P = (1 - q) * self.E_P + q * self.kernel(self.xp, self.xn[i_t])
-
-
-
-            """
-            for i in xrange(len(self.xn)):
-                self.alpha_n[i] = ((1 - q) * self.alpha_n[i]) + (q * SVM.delta(i, i_t))
-                self.E_N[i] = (1 - q) * self.E_N[i] + q * xt_xt
-           
-            for i in xrange(len(self.xp)):
-                self.E_P[i] = (1 - q) * self.E_P[i] + q * xt_xt
-            """
 
     def stop_condition(self, m_t):
         hp_distance = np.sqrt(self.A + self.B - 2*self.C)
@@ -174,26 +156,30 @@ class SVM:
         return (np.dot(x, y) + 1) ** self.kernel_degree
 
     def save_model(self, model_file_name):
-        os.chdir(".")
+        BASEDIR = os.path.dirname(os.path.realpath(__file__))
         model = {
             "xp": self.xp,
             "xn": self.xn,
             "A": self.A,
             "B": self.B,
             "alpha_p": self.alpha_p,
-            "alpha_n": self.alpha_n
+            "alpha_n": self.alpha_n,
+            "class_letter" : self.class_letter,
+            "lambda" : self._lambda,
+            "mpos" : self.mpos,
+            "mneg" : self.mneg
         }
 
         try:
-            with open(model_file_name, "wb") as f:
+            with open(os.path.join(BASEDIR,model_file_name), "wb") as f:
                 pickle.dump(model, f)
         except Exception as e:
             print "ERROR: Exception while trying to save model. " + str(e)
 
     def load_model(self, model_file_name):
-        os.chdir(".")
+        BASEDIR = os.path.dirname(os.path.realpath(__file__))
         try:
-            with open(model_file_name, "rb") as f:
+            with open(os.path.join(BASEDIR, model_file_name), "rb") as f:
                 model = pickle.load(f)
                 self.alpha_n = model["alpha_n"]
                 self.alpha_p = model["alpha_p"]
@@ -201,6 +187,10 @@ class SVM:
                 self.xn = model["xn"]
                 self.A = model["A"]
                 self.B = model["B"]
+                self.class_letter = model["class_letter"]
+                self._lambda = model["lambda"]
+                self.mpos = model["mpos"]
+                self.mneg = model["mneg"]
         except Exception as e:
             print "ERROR: Exception while loading saved model. " +str(e)
 
