@@ -146,7 +146,7 @@ class Data:
             # width = random.randint(1, self.brush_stroke_max)
             att = getattr(self, "base_im_" + symbol_sel)  # Get the function object to draw appropriate symbol
             image = att
-            print('Image size --> {}'.format(image.size))
+            #print('Image size --> {}'.format(image.size))
             image = self._trans_pos(image)
             image = self._trans_resize(image)
             image = self._trans_orientation(image)
@@ -190,11 +190,7 @@ class Data:
         r_pos = max(np.linalg.norm(rdiff_pos, axis=1))
         rdiff_neg = x_neg - m_neg
         r_neg = max(np.linalg.norm(rdiff_neg, axis=1))
-        print(r_pos)
-        print(r_pos)
-        print(r)
         _lambda = (0.25)*(r/(r_pos + r_neg))
-        print(_lambda)
         # print('lam --> {}'.format(lam))
         # x_pos_prime = lam * x_pos + (1-lam) * m_pos
         # x_neg_prime = lam * x_neg + (1 - lam) * m_neg
@@ -203,7 +199,7 @@ class Data:
     def scale_data(self, x, _lambda, m):
         return _lambda * x + (1-_lambda) * m
 
-if "__name__" == "__main__":
+if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Insufficient number of arguments.\nPattern : python zener_generator.py data 10000")
         sys.exit()
