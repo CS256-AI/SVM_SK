@@ -30,7 +30,7 @@ class SVM:
         self.sk_initialize()
         i_t, t_positive, m_t = self.sk_optimize()
         while not self.stop_condition(m_t)[0] and updates < self.max_updates:
-            print "Current Iteration : {}. Difference : {}".format(updates, self.stop_condition(m_t)[1])
+            print "Current Iteration: {}. Difference : {}".format(updates, self.stop_condition(m_t)[1])
             self.sk_update(i_t, t_positive)
             i_t, t_positive, m_t = self.sk_optimize()
             updates += 1
